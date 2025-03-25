@@ -8,6 +8,6 @@ For those who don't have physical setup:
 3. Find the VGA Display at Right Bar, scale up as you wish
 -  SW0 -- Start Game
 -  SW1 -- Reset Game
--  ASD, Space -- Character Control (Need to Click on PS2-Keyboard Panel on Right Bar)
--  EDR displays current level
+-  WASD, Space -- Character Control (Need to Click on PS2-Keyboard Panel on Right Bar)
+-  LEDR displays current level
 8. ENJOY!!!
