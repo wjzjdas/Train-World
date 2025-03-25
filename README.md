@@ -10,4 +10,4 @@ For those who don't have physical setup:
 -  SW1 -- Reset Game
 -  WASD, Space -- Character Control (Need to Click on PS2-Keyboard Panel on Right Bar)
 -  LEDR displays current level
-4. ENJOY!!!
+#### ENJOY!!!
