@@ -6,8 +6,8 @@ For those who don't have physical setup:
 1. Go to [CPULator](https://cpulator.01xz.net/?sys=rv32-de1soc)
 2. [File --> Open] main.c and hit [Compile and Load], then hit [Continue]
 3. Find the VGA Display at Right Bar, scale up as you wish
- A) SW0 -- Start Game
- B) SW1 -- Reset Game
- C) WASD, Space -- Character Control (Need to Click on PS2-Keyboard Panel on Right Bar)
- D) LEDR displays current level
+-  SW0 -- Start Game
+-  SW1 -- Reset Game
+-  ASD, Space -- Character Control (Need to Click on PS2-Keyboard Panel on Right Bar)
+-  EDR displays current level
 8. ENJOY!!!
