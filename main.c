@@ -56,8 +56,8 @@ pixel_rgb_t CYAN = {24, 47, 4};
 #define GROUND_LEVEL 209
 
 // Gravity system parameters
-const int gravity = 1;                 // Gravity acceleration (applied each frame)
-const int jump_initial_velocity = -12; // Initial jump velocity (negative value makes the character move up)
+const int gravity = 8;                 // Gravity acceleration (applied each frame)
+const int jump_initial_velocity = -24; // Initial jump velocity (negative value makes the character move up)
 static int vertical_velocity = 0;      // Current vertical velocity of the character
 static int is_jumping = 0;             // 0: not jumping, 1: currently in a jump
 
@@ -74,8 +74,8 @@ typedef struct {
 
 //SLUGFOX初始位置
 const Position init_pos[11] = {
-    {80, 160},
-    {80, 160}, // Level 0 & 1 
+    {80, 167},
+    {80, 167}, // Level 0 & 1 
     {20, 180},  // Level 2
     {40, 160},  // Level 3
     {60, 140},  // Level 4
@@ -862,7 +862,7 @@ typedef struct {
 } Slugfox;
 
 Slugfox slugfox = {
-    {80, 160}, // chara_pos (initial position)
+    {80, 167}, // chara_pos (initial position)
     30,        // w
     42,        // h
     1,         // face_dir (right by default)
@@ -1570,7 +1570,7 @@ int main() {
             } 
 
             //仅在游戏开始后奏效
-            else if (current_level > 0) {
+            else {
                 //更新玩家位置
                 update_character_movement(&slugfox.chara_pos);
 
@@ -1609,6 +1609,13 @@ void init_video() {
 
 void clear_screen() {
     switch(current_level){
+        case 0:
+            for (int y = 0; y < HEIGHT; y++) {
+                for (int x = 0; x < WIDTH; x++) {
+                    vp->bfbp->pixels[y][x] = level.title_screen[y][x];
+                }
+            }
+            break;
         case 1:
             for (int y = 0; y < HEIGHT; y++) {
                 for (int x = 0; x < WIDTH; x++) {
@@ -1627,11 +1634,7 @@ void clear_screen() {
 }
 
 void draw_start_screen() {
-    for (int y = 0; y < HEIGHT; y++) {
-        for (int x = 0; x < WIDTH; x++) {
-            vp->bfbp->pixels[y][x] = level.title_screen[y][x];
-        }
-    }
+    clear_screen();
     //绘制玩家位置
     draw_character(&slugfox);
     write_hex(current_level);
@@ -1901,11 +1904,11 @@ void update_character_movement(Position *chara_pos) {
     // Normal Movement on the Ground
     if (!is_jumping) {
         if (leftPressed && chara_pos->x > 0) { // Prevent moving left beyond screen
-            chara_pos->x -= 3;
+            chara_pos->x -= 5;
             slugfox.face_dir = 0; // Face left
         }
         if (rightPressed && chara_pos->x + slugfox.w < WIDTH) { // Prevent moving right beyond screen
-            chara_pos->x += 3;
+            chara_pos->x += 5;
             slugfox.face_dir = 1; // Face right
         }
     }
@@ -1915,10 +1918,10 @@ void update_character_movement(Position *chara_pos) {
         vertical_velocity = jump_initial_velocity;
         is_jumping = 1;
         if (leftPressed && !rightPressed) {
-            horizontal_velocity = -3;
+            horizontal_velocity = -5;
             slugfox.face_dir = 0; // Face left
         } else if (rightPressed && !leftPressed) {
-            horizontal_velocity = 3;
+            horizontal_velocity = 5;
             slugfox.face_dir = 1; // Face right
         } else {
             horizontal_velocity = 0; // Pure vertical jump
@@ -2059,19 +2062,20 @@ void redraw_frame(const Position *chara_pos) {
     }
 
     update_frame_counter();  // Must be called here
-
-    for (int y = 0; y < HEIGHT; y++) {
-        for (int x = 0; x < WIDTH; x++) {
-            pixel_rgb_t pixel = level.level_1_front[y][x];
-            // Skip pixels that are near white (within tolerance of WHITE) or pure black
-            if (pixel.r == CYAN.r &&
-                pixel.g == CYAN.g &&
-                pixel.b == CYAN.b) {
-                continue;
+    if (current_level == 1) {
+        for (int y = 0; y < HEIGHT; y++) {
+            for (int x = 0; x < WIDTH; x++) {
+                pixel_rgb_t pixel = level.level_1_front[y][x];
+                // Skip pixels that are near white (within tolerance of WHITE) or pure black
+                if (pixel.r == CYAN.r &&
+                    pixel.g == CYAN.g &&
+                    pixel.b == CYAN.b) {
+                    continue;
+                }
+                vp->bfbp->pixels[y][x] = pixel;
             }
-            vp->bfbp->pixels[y][x] = pixel;
         }
-    }
+    }   
     draw_character(&slugfox);
      // Draw all elements in order
     if (current_level > 0) {
