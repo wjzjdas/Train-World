@@ -53,7 +53,7 @@ pixel_rgb_t PURPLE = {31, 0, 19};
 pixel_rgb_t CYAN = {24, 47, 4};
 
 // Define ground level (y-coordinate where the ground is located)
-#define GROUND_LEVEL 207
+#define GROUND_LEVEL 209
 
 // Gravity system parameters
 const int gravity = 1;                 // Gravity acceleration (applied each frame)
@@ -1794,7 +1794,12 @@ void draw_character(Slugfox *slugfox) {
                  abs(pixel.b - PURPLE.b) <= tolerance)) {
                 continue;
             }
-            vp->bfbp->pixels[py][px] = pixel;
+            if (horizontal_velocity_clone == 0){
+                vp->bfbp->pixels[py][px] = pixel;
+            } else { //防止角色和地面穿模
+                vp->bfbp->pixels[py-3][px] = pixel;
+            }
+            
         }
     }
 }
