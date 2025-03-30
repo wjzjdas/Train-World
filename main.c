@@ -27,7 +27,8 @@ int current_level = 0;
 volatile unsigned int frame_counter = 0;
 
 //掌控玩家移动
-int horizontal_velocity = 0;
+static int horizontal_velocity = 0;
+int horizontal_velocity_clone = 0;
 
 //RISCV VGA显示定义
 #define uint32 unsigned int
@@ -947,7 +948,7 @@ void draw_character(Slugfox *slugfox) {
     int w = slugfox->w;
     int frame_duration = 5;
     int anim_frame = (frame_counter / frame_duration) % 4;
-    if (horizontal_velocity != 0){
+    if (horizontal_velocity_clone != 0){
         w = 40;
         h = 45;
         anim_frame = (frame_counter / frame_duration) % 3;
@@ -956,7 +957,7 @@ void draw_character(Slugfox *slugfox) {
 
 
     
-    if (horizontal_velocity == 0) {
+    if (horizontal_velocity_clone == 0) {
         if (slugfox->face_dir == 1) {  // Facing right
             switch (anim_frame) {
                 case 0:
@@ -984,6 +985,9 @@ void draw_character(Slugfox *slugfox) {
                     break;
                 case 2:
                     sprite = &slugfox->static_left_3;
+                    break;
+                case 3:
+                    sprite = &slugfox->static_left_2;
                     break;
                 default:
                     sprite = &slugfox->static_left_1;
@@ -1068,7 +1072,7 @@ void trigger_collision(Position *chara_pos){
         int tx = trigger_pos[current_level].x;
         int ty = trigger_pos[current_level].y;
         int chara_left = chara_pos->x;
-        if (horizontal_velocity > 0) {chara_left = chara_left + 10;}//在向右跑时，让碰撞箱右移10像素
+        if (horizontal_velocity_clone > 0) {chara_left = chara_left + 10;}//在向右跑时，让碰撞箱右移10像素
         if (chara_left + slugfox.w >= tx && chara_left <= tx + slugfox.w &&
             chara_pos->y + slugfox.h >= ty && chara_pos->y <= ty + slugfox.h) {
             current_level++;
@@ -1089,19 +1093,23 @@ void update_character_movement(Position *chara_pos) {
     int rightPressed = 0;
     int PS2_data, RVALID;
     unsigned char key;
-
+    unsigned char lastKey = -1; 
+    horizontal_velocity_clone = 0;
     // Process all keys in the FIFO and set flags for each relevant key
     while (1) {
+        
         PS2_data = *(PS2_ptr);             // Read data from the PS/2 port
         RVALID = (PS2_data & 0x8000);      // Check if data is valid (high bit indicates validity)
         if (!RVALID) {
             break; // Exit if FIFO is empty
         }
         key = PS2_data & 0xFF;             // Get the scan code (lower 8 bits)
-        if (key == 0xF0) {                 // Ignore break codes
-            horizontal_velocity = 0;
+
+        if (key == 0xF0) {  // Break code detected (next key is the released key)
+            lastKey = -1;    // Reset lastKey to detect which key is released
             continue;
         }
+
         switch (key) {
             case 0x1D:  // W key: jump trigger
                 jumpPressed = 1;
@@ -1111,15 +1119,16 @@ void update_character_movement(Position *chara_pos) {
                 break;
             case 0x1C:  // A key: left movement
                 leftPressed = 1;
-                horizontal_velocity = -1;
+                horizontal_velocity_clone = -3;
                 break;
             case 0x23:  // D key: right movement
                 rightPressed = 1;
-                horizontal_velocity = 1;
+                horizontal_velocity_clone = 3;
                 break;
             default:
                 break;
         }
+        lastKey = key;
     }
 
     // BLOCK CHARACTER AT SCREEN BORDERS
@@ -1193,6 +1202,7 @@ void update_character_movement(Position *chara_pos) {
             is_jumping = 0;
         }
     }
+    
 }
 
 
@@ -1212,9 +1222,9 @@ void train_gen(){
 
 int train_collision(const Position *chara_pos) {
     int chara_left = chara_pos->x;
-    if (horizontal_velocity > 0) {chara_left = chara_left + 10;}//在向右跑时，让碰撞箱右移10像素
+    if (horizontal_velocity_clone > 0) {chara_left = chara_left + 10;}//在向右跑时，让碰撞箱右移10像素
     int chara_right = chara_pos->x + slugfox.w;
-    if (horizontal_velocity > 0) {chara_right = chara_right + 10;}//在向右跑时，让碰撞箱右移10像素
+    if (horizontal_velocity_clone > 0) {chara_right = chara_right + 10;}//在向右跑时，让碰撞箱右移10像素
     int chara_top = chara_pos->y;
     int chara_bottom = chara_pos->y + slugfox.h;
 
