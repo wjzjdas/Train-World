@@ -27,6 +27,6 @@ For those who don't have physical setup:
 -  Enter - Enter Zen Mode (Where bullets will disappear for a limited period, watch out for the green bar on top!!!)
 -  If you encounter bugs with PS/2 Keyboard panel, it could be because your keyboard processes debounce differently than PS/2. Try other keyboards if avaliable.
 -  LEDR displays current level
--  Try to avoid bullets and reach the star trigger!
+6. Try to avoid bullets and reach the star trigger!
 ## ENJOY!!!
 - Made by JDas and Dylan || 03/31/2025
