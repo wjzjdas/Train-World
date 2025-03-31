@@ -14,7 +14,7 @@ RISC-V Based 2D Platformer (Heavily inspired by Rain World!!! <3)
 For those who don't have physical setup:
 1. Go to [CPULator](https://cpulator.01xz.net/?sys=rv32-de1soc) (Or search up CPULator, select for RISC-V RV32 --> RISC-V RV32 DE1-SoC)
 2. In Editor Window, set [Language] from RV32 to C
-3. [File --> Open] main.c and hit [Compile and Load], then hit [Continue]
+3. [File --> Open] select main.c and hit [Compile and Load], then hit [Continue] (or you can also copy my main.c into the editor window :/)
 4. Find the VGA Display at Right Bar, this is where the game will display, scale it up as you wish!
 5. Below are the game controls:
 -  SW0 -- Start Game (Enter Level 1)
