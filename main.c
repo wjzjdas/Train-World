@@ -1,4 +1,5 @@
 
+	
 	#include <stdint.h>
 
 //IO.c
@@ -1882,46 +1883,56 @@ int on_platform(Position *chara_pos) {
 
 void update_character_movement(Position *chara_pos) {
     int switches = read_switches();
-    int jumpPressed = 0, manualDownPressed = 0, leftPressed = 0, rightPressed = 0;
+    // 使用静态变量保存各个键的状态
+    static int w_pressed = 0, a_pressed = 0, s_pressed = 0, d_pressed = 0;
     int PS2_data, RVALID;
-    unsigned char key;
-    unsigned char lastKey = -1;
-    horizontal_velocity_clone = 0;
+    unsigned char code;
+    static int break_detected = 0;  // 标记是否检测到Break码
 
-    // Process all keys in the FIFO and set flags
+    // 从FIFO读取所有数据更新按键状态
     while (1) {
         PS2_data = *(PS2_ptr);
         RVALID = (PS2_data & 0x8000);
         if (!RVALID) {
             break;
         }
-        key = PS2_data & 0xFF;
-        if (key == 0xF0) {  // Break code, ignore
-            lastKey = -1;
+        code = PS2_data & 0xFF;
+        if (code == 0xF0) {  // Break码标记
+            break_detected = 1;
             continue;
         }
-        switch (key) {
-            case 0x1D:  // W key: jump
-                jumpPressed = 1;
-                break;
-            case 0x1B:  // S key: manual downward movement
-                manualDownPressed = 1;
-                break;
-            case 0x1C:  // A key: left movement
-                leftPressed = 1;
-                horizontal_velocity_clone = -3;
-                break;
-            case 0x23:  // D key: right movement
-                rightPressed = 1;
-                horizontal_velocity_clone = 3;
-                break;
-            default:
-                break;
+        if (break_detected) {
+            // 根据释放的键更新状态
+            switch (code) {
+                case 0x1D: w_pressed = 0; break;
+                case 0x1B: s_pressed = 0; break;
+                case 0x1C: a_pressed = 0; break;
+                case 0x23: d_pressed = 0; break;
+                default: break;
+            }
+            break_detected = 0;
+        } else {
+            // 按下状态
+            switch (code) {
+                case 0x1D: w_pressed = 1; break;
+                case 0x1B: s_pressed = 1; break;
+                case 0x1C: a_pressed = 1; break;
+                case 0x23: d_pressed = 1; break;
+                default: break;
+            }
         }
-        lastKey = key;
     }
 
-    // Block character at screen borders
+    // 根据a_pressed和d_pressed设置水平速度克隆（供动画使用）
+    if (a_pressed && !d_pressed) {
+        horizontal_velocity_clone = -3;
+    } else if (d_pressed && !a_pressed) {
+        horizontal_velocity_clone = 3;
+    } else {
+        horizontal_velocity_clone = 0;
+    }
+
+    // 边界检测
     if (chara_pos->x <= 0) {
         chara_pos->x = 0;
         horizontal_velocity = 0;
@@ -1931,27 +1942,27 @@ void update_character_movement(Position *chara_pos) {
         horizontal_velocity = 0;
     }
 
-    // Ground movement (only when not in the air)
+    // 地面上允许左右移动（非跳跃状态）
     if (!is_jumping) {
-        if (leftPressed && chara_pos->x > 0) {
+        if (a_pressed && chara_pos->x > 0) {
             chara_pos->x -= 5;
             slugfox.face_dir = 0;
         }
-        if (rightPressed && chara_pos->x + slugfox.w < WIDTH) {
+        if (d_pressed && chara_pos->x + slugfox.w < WIDTH) {
             chara_pos->x += 5;
             slugfox.face_dir = 1;
         }
     }
 
-    // Jump initiation: allow jump if on ground or on a platform
-    if (jumpPressed && !is_jumping &&
+    // 跳跃触发（允许在地面或平台上跳跃）
+    if (w_pressed && !is_jumping &&
         ((chara_pos->y + slugfox.h >= GROUND_LEVEL) || on_platform(chara_pos))) {
         vertical_velocity = jump_initial_velocity;
         is_jumping = 1;
-        if (leftPressed && !rightPressed) {
+        if (a_pressed && !d_pressed) {
             horizontal_velocity = -5;
             slugfox.face_dir = 0;
-        } else if (rightPressed && !leftPressed) {
+        } else if (d_pressed && !a_pressed) {
             horizontal_velocity = 5;
             slugfox.face_dir = 1;
         } else {
@@ -1959,29 +1970,27 @@ void update_character_movement(Position *chara_pos) {
         }
     }
 
-    // Manual downward movement
-    if (manualDownPressed && !is_jumping && (chara_pos->y + slugfox.h < HEIGHT)) {
+    // S键：向下移动
+    if (s_pressed && !is_jumping && (chara_pos->y + slugfox.h < HEIGHT)) {
         chara_pos->y += 3;
     }
 
-    // If not on ground or platform, start falling
+    // 如果不在地面或平台上，则开始下落
     if (!is_jumping && (chara_pos->y + slugfox.h < GROUND_LEVEL) && !on_platform(chara_pos)) {
         is_jumping = 1;
         vertical_velocity = 0;
     }
 
-    // Apply gravity and update position if in the air
+    // 应用重力和跳跃物理
     if (is_jumping) {
-        // In air, fixed horizontal velocity (captured at jump start)
+        // 空中时，应用固定水平速度（跳跃开始时捕获）
         chara_pos->x += horizontal_velocity;
         int new_y = chara_pos->y + vertical_velocity;
         int landed = 0;
-
-        // Check collision with each platform
+        // 检查是否与平台碰撞
         for (int i = 0; i < NUM_PLATFORMS; i++) {
             if (chara_pos->x + slugfox.w > platforms[i].x &&
                 chara_pos->x < platforms[i].x + 50) {
-                // If falling and crossing the platform's top
                 if (vertical_velocity >= 0 &&
                     chara_pos->y + slugfox.h <= platforms[i].y &&
                     new_y + slugfox.h >= platforms[i].y) {
@@ -1994,8 +2003,6 @@ void update_character_movement(Position *chara_pos) {
                 }
             }
         }
-
-        // If not landed on a platform, check for ground landing
         if (!landed) {
             if (new_y + slugfox.h >= GROUND_LEVEL) {
                 chara_pos->y = GROUND_LEVEL - slugfox.h;
