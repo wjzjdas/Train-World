@@ -1,4 +1,4 @@
-# Train-World - A COLLAB PROJECT
+# Train-World 
 RISC-V Based 2D Platformer (Heavily inspired by Rain World!!! <3)
 - Our Main Character is SlugFox! (Not really a slug, is it?)
 
@@ -28,3 +28,4 @@ For those who don't have physical setup:
 -  LEDR displays current level
 -  Try to avoid bullets and reach the star trigger!
 ## ENJOY!!!
+- Made by JDas and Dylan
