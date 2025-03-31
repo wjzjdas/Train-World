@@ -1826,21 +1826,27 @@ void draw_trigger(Position *trigg_pos) {
     }
 }
 
-void trigger_collision(Position *chara_pos){
-    if (current_level <= 9) {
-        int tx = trigger_pos[current_level].x;
-        int ty = trigger_pos[current_level].y;
-        int chara_left = chara_pos->x;
-        if (horizontal_velocity_clone > 0) {chara_left = chara_left + 10;}//在向右跑时，让碰撞箱右移10像素
-        if (chara_left + slugfox.w >= tx && chara_left <= tx + slugfox.w &&
-            chara_pos->y + slugfox.h >= ty && chara_pos->y <= ty + slugfox.h) {
-            current_level++;
-            if (current_level > 10) current_level = 10;
-            //将玩家位置重设为关卡开始点
-            *chara_pos = init_pos[current_level];
-            draw_init_level(current_level);  // Redraw new level
-            write_hex(current_level);   
-        }
+void trigger_collision(Position *chara_pos) {
+    int chara_left = chara_pos->x;
+    if (horizontal_velocity_clone > 0) {chara_left = chara_left + 10;}//在向右跑时，让碰撞箱右移10像素
+    int chara_right = chara_pos->x + slugfox.w;
+    if (horizontal_velocity_clone > 0) {chara_right = chara_right + 10;}//在向右跑时，让碰撞箱右移10像素
+    int chara_top = chara_pos->y;
+    int chara_bottom = chara_pos->y + slugfox.h;
+
+    int trigger_left = trigger_pos[current_level].x;
+    int trigger_right = trigger_pos[current_level].x + 5;
+    int trigger_top = trigger_pos[current_level].y;
+    int trigger_bottom = trigger_pos[current_level].y + 5;
+
+    if (chara_right >= trigger_left && chara_left <= trigger_right &&
+        chara_bottom >= trigger_top && chara_top <= trigger_bottom) {
+        current_level++;
+        if (current_level > 10) {current_level = 10;}
+        //将玩家位置重设为关卡开始点
+        *chara_pos = init_pos[current_level];
+        draw_init_level(current_level);  // Redraw new level
+        write_hex(current_level);    
     }
 }
 
