@@ -15,6 +15,7 @@ For those who don't have physical setup:
 2. In Editor Window, set [Language] from RV32 to C
 3. [File --> Open] main.c and hit [Compile and Load], then hit [Continue]
 4. Find the VGA Display at Right Bar, this is where the game will display, scale it up as you wish!
+5. Below are the game controls:
 -  SW0 -- Start Game (Enter Level 1)
 -  SW1 -- Reset Game (Return to Title Screen (Level 0))
 -  Control: (Need to Use PS2-Keyboard Panel on Right Bar)
