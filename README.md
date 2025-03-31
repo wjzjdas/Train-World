@@ -3,7 +3,10 @@ RISC-V Based 2D Platformer (Title inspired by Rain World, Obviously)
 - Our Main Character is SlugFox! (Not really a slug, is it?)
 
 ![static_r1](https://github.com/user-attachments/assets/9c2dec6f-1a45-4718-817f-2575713144e2)
+![static_r2](https://github.com/user-attachments/assets/de8bca48-77cc-461c-9320-c28bb7a2e436)
+![static_r3](https://github.com/user-attachments/assets/b92dbbda-a2f5-482c-bc03-cd98c686726a)
 ![move_r1](https://github.com/user-attachments/assets/0029ce5e-136d-4128-8cf4-d973ddd02402)
+![move_r2](https://github.com/user-attachments/assets/247b5cb0-0842-4f6a-981c-aac78e28dba7)
 ![move_r3](https://github.com/user-attachments/assets/a828cf31-b665-4754-a340-9d645e973fb1)
 
 # How To Play
