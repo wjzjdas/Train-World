@@ -83,30 +83,30 @@ typedef struct {
 const Position init_pos[11] = {
     {80, 167},
     {80, 167}, // Level 0 & 1 
-    {20, 180},  // Level 2
-    {40, 160},  // Level 3
-    {60, 140},  // Level 4
-    {80, 120},  // Level 5
-    {100, 100}, // Level 6
-    {120, 80},  // Level 7
-    {140, 60},  // Level 8
-    {160, 40},  // Level 9
-    {180, 20}   // Level 10
+    {80, 167},  // Level 2
+    {80, 167},  // Level 3
+    {80, 167},  // Level 4
+    {80, 167},  // Level 5
+    {80, 167}, // Level 6
+    {80, 167},  // Level 7
+    {80, 167},  // Level 8
+    {80, 167},  // Level 9
+    {80, 167}  // Level 10
 };
 
 //通关TRIGGER位置
 const Position trigger_pos[11] = {
     {0, 0},
     {230, 35}, // Level 1 trigger
-    {260, 160}, // Level 2 trigger
-    {240, 140}, // Level 3 trigger
-    {220, 120}, // Level 4 trigger
-    {200, 100}, // Level 5 trigger
-    {180, 80},  // Level 6 trigger
-    {160, 60},  // Level 7 trigger
-    {140, 40},  // Level 8 trigger
-    {120, 20},  // Level 9 trigger
-    {120, 20}   // Level 10 trigger
+    {230, 35}, // Level 2 trigger
+    {230, 35}, // Level 3 trigger
+    {230, 35}, // Level 4 trigger
+    {230, 35}, // Level 5 trigger
+    {230, 35},  // Level 6 trigger
+    {230, 35},  // Level 7 trigger
+    {230, 35},  // Level 8 trigger
+    {230, 35},  // Level 9 trigger
+    {230, 35}   // Level 10 trigger
 };
 
 typedef struct{
@@ -1453,91 +1453,146 @@ typedef struct {
     int w,h;
     int hor_speed, ver_speed;    //per frame + for right, - for left
     int active;   // 1 if visible, 0 if inactive
+    int zen_ctrl; //是否被zen mode所控制
 } Train;
 
-Train trains[5] = 
+Train trains[10] = 
 {{{0,0},0,0,0,0,0},
 {{0,0},0,0,0,0,0},
 {{0,0},0,0,0,0,0},
 {{0,0},0,0,0,0,0},
-{{0,0},0,0,0,0,0}};  
+{{0,0},0,0,0,0,0},
+{{0,0},0,0,0,0,0},
+{{0,0},0,0,0,0,0},
+{{0,0},0,0,0,0,0},
+{{0,0},0,0,0,0,0},
+{{0,0},0,0,0,0,0},};  
 
 // Struct for level-specific train data (5 trains per level)
 typedef struct {
-    Train trains[5];
+    Train trains[10];
 } LevelTrains;
 
 // Level-specific train data (levels 1-10, indexed 0-9)
 const LevelTrains level_trains[10] = {
     // Level 1
-    {{{{155, 230}, 9, 9, 0, 2, 1},    
-      {{300, 112}, 18, 10, -4, 0, 1},  
-      {{240, 112}, 18, 10, -4, 0, 1},     
-      {{155, 210}, 9, 9, 0, 2, 1},      
-      {{30, 50}, 18, 10, 2, 0, 1}}},  
+    {{{{300, 112}, 18, 10, -4, 0, 1, 1},  
+      {{260, 112}, 18, 10, -4, 0, 1, 1},
+      {{220, 112}, 18, 10, -4, 0, 0, 0},
+      {{180, 112}, 18, 10, -4, 0, 0, 0},
+      {{155, 230}, 9, 9, 0, 2, 1, 1},     
+      {{155, 210}, 9, 9, 0, 2, 1, 1},      
+      {{155, 190}, 9, 9, 0, 2, 0, 0},
+      {{155, 170}, 9, 9, 0, 2, 0, 0},
+      {{30, 50}, 18, 10, 2, 0, 1, 1},
+      {{10, 50}, 18, 10, 2, 0, 0, 0}}},  
 
     // Level 2
-    {{{{0, 50}, 10, 20, 3, 0, 1},       // Fast right, top
-      {{280, 180}, 15, 15, -3, 0, 1},    // Fast left, bottom
-      {{300, 120}, 5, 10, 0, 2, 1},      // Moving down
-      {{200, 90}, 10, 5, 0, -2, 1},      // Moving up
-      {{150, 150}, 20, 20, 0, 0, 1}}},   // Static, large
+    {{{{300, 112}, 18, 10, -4, 0, 1, 1},  
+      {{260, 112}, 18, 10, -4, 0, 1, 1},
+      {{220, 112}, 18, 10, -4, 0, 1, 1},
+      {{180, 112}, 18, 10, -4, 0, 0, 0},
+      {{155, 230}, 9, 9, 0, 2, 1, 1},     
+      {{155, 210}, 9, 9, 0, 2, 1, 1},      
+      {{155, 190}, 9, 9, 0, 2, 1, 1},
+      {{155, 170}, 9, 9, 0, 2, 0, 0},
+      {{30, 50}, 18, 10, 2, 0, 1, 1},
+      {{10, 50}, 18, 10, 2, 0, 0, 0}}},  
 
     // Level 3
-    {{{{20, 70}, 10, 10, 2, 1, 1},      // Diagonal right-down
-      {{300, 170}, 15, 10, -2, -1, 1},   // Diagonal left-up
-      {{80, 130}, 5, 15, 0, 0, 1},       // Static
-      {{220, 100}, 10, 20, 3, 0, 1},     // Fast right
-      {{150, 190}, 20, 5, -3, 0, 1}}},   // Fast left
-
+    {{{{300, 112}, 18, 10, -6, 0, 1, 1},  
+      {{260, 112}, 18, 10, -6, 0, 1, 1},
+      {{220, 112}, 18, 10, -6, 0, 1, 1},
+      {{180, 112}, 18, 10, -4, 0, 0, 0},
+      {{155, 230}, 9, 9, 0, 4, 1, 1},     
+      {{155, 210}, 9, 9, 0, 4, 1, 1},      
+      {{155, 190}, 9, 9, 0, 4, 1, 1},
+      {{155, 170}, 9, 9, 0, 2, 0, 0},
+      {{30, 50}, 18, 10, 2, 0, 1, 1},
+      {{10, 50}, 18, 10, 2, 0, 0, 0}}},  
     // Level 4
-    {{{{0, 90}, 15, 15, 4, 0, 1},       // Very fast right
-      {{310, 150}, 10, 20, -4, 0, 1},    // Very fast left
-      {{120, 60}, 5, 10, 0, 3, 1},       // Fast down
-      {{180, 180}, 10, 5, 0, -3, 1},     // Fast up
-      {{50, 120}, 20, 10, 0, 0, 1}}},    // Static
+    {{{{300, 112}, 18, 10, -6, 0, 1, 1},  
+      {{260, 112}, 18, 10, -6, 0, 1, 1},
+      {{220, 112}, 18, 10, -6, 0, 1, 1},
+      {{180, 112}, 18, 10, -4, 0, 0, 0},
+      {{155, 230}, 9, 9, 0, 4, 1, 1},     
+      {{155, 210}, 9, 9, 0, 4, 1, 1},      
+      {{155, 190}, 9, 9, 0, 4, 1, 1},
+      {{155, 170}, 9, 9, 0, 2, 0, 0},
+      {{30, 50}, 18, 10, 2, 0, 1, 1},
+      {{10, 50}, 18, 10, 2, 0, 1, 1}}},  
 
     // Level 5
-    {{{{100, 80}, 10, 15, 2, 2, 1},     // Diagonal right-down
-      {{200, 160}, 15, 10, -2, -2, 1},   // Diagonal left-up
-      {{0, 140}, 5, 20, 3, 0, 1},        // Right
-      {{300, 100}, 20, 5, -3, 0, 1},     // Left
-      {{150, 120}, 10, 10, 0, 0, 1}}},   // Static
+    {{{{300, 112}, 18, 10, -4, 0, 1, 1},  
+      {{260, 112}, 18, 10, -4, 0, 1, 1},
+      {{220, 112}, 18, 10, -4, 0, 1, 1},
+      {{180, 112}, 18, 10, -4, 0, 1, 1},
+      {{155, 230}, 9, 9, 0, 2, 1, 1},     
+      {{155, 210}, 9, 9, 0, 2, 1, 1},      
+      {{155, 190}, 9, 9, 0, 2, 1, 1},
+      {{155, 170}, 9, 9, 0, 2, 1, 1},
+      {{30, 50}, 18, 10, 2, 0, 1, 1},
+      {{10, 50}, 18, 10, 2, 0, 1, 1}}},  
 
     // Level 6
-    {{{{0, 60}, 15, 10, 2, 0, 1},       // Right
-      {{280, 180}, 10, 15, -2, 0, 1},    // Left
-      {{80, 110}, 5, 20, 0, 4, 1},       // Very fast down
-      {{220, 70}, 20, 5, 0, -4, 1},      // Very fast up
-      {{150, 150}, 10, 10, 0, 0, 1}}},   // Static
+    {{{{300, 112}, 18, 10, -2, 0, 1, 1},  
+      {{260, 112}, 18, 10, -4, 0, 1, 1},
+      {{220, 112}, 18, 10, -6, 0, 0, 0},
+      {{180, 112}, 18, 10, -8, 0, 0, 0},
+      {{155, 230}, 9, 9, 0, 4, 1, 1},     
+      {{155, 210}, 9, 9, 0, 6, 1, 1},      
+      {{155, 190}, 9, 9, 0, 8, 0, 0},
+      {{155, 170}, 9, 9, 0, 10, 0, 0},
+      {{30, 50}, 18, 10, 2, 0, 1, 1},
+      {{10, 50}, 18, 10, 2, 0, 0, 0}}},  
 
     // Level 7
-    {{{{40, 90}, 10, 20, 3, 1, 1},      // Diagonal right-down
-      {{260, 160}, 15, 10, -3, -1, 1},   // Diagonal left-up
-      {{100, 130}, 5, 15, 0, 0, 1},      // Static
-      {{200, 80}, 20, 5, 4, 0, 1},       // Very fast right
-      {{150, 190}, 10, 10, -4, 0, 1}}},  // Very fast left
+    {{{{300, 112}, 18, 10, -2, 0, 1, 1},  
+      {{260, 112}, 18, 10, -4, 0, 1, 1},
+      {{220, 112}, 18, 10, -6, 0, 0, 0},
+      {{180, 112}, 18, 10, -8, 0, 0, 0},
+      {{155, 230}, 9, 9, 0, 4, 1, 1},     
+      {{155, 210}, 9, 9, 0, 6, 1, 1},      
+      {{155, 190}, 9, 9, 0, 8, 1, 1},
+      {{155, 170}, 9, 9, 0, 10, 1, 1},
+      {{30, 50}, 18, 10, 2, 0, 1, 1},
+      {{10, 50}, 18, 10, 2, 0, 0, 0}}},  
 
     // Level 8
-    {{{{0, 100}, 15, 15, 2, 2, 1},      // Diagonal right-down
-      {{300, 140}, 10, 20, -2, -2, 1},   // Diagonal left-up
-      {{120, 60}, 5, 10, 0, 3, 1},       // Fast down
-      {{180, 180}, 20, 5, 0, -3, 1},     // Fast up
-      {{60, 120}, 10, 15, 0, 0, 1}}},    // Static
+    {{{{300, 112}, 18, 10, -2, 0, 1, 1},  
+      {{260, 112}, 18, 10, -4, 0, 1, 1},
+      {{220, 112}, 18, 10, -6, 0, 1, 1},
+      {{180, 112}, 18, 10, -8, 0, 1, 1},
+      {{155, 230}, 9, 9, 0, 4, 1, 1},     
+      {{155, 210}, 9, 9, 0, 6, 1, 1},      
+      {{155, 190}, 9, 9, 0, 8, 1, 1},
+      {{155, 170}, 9, 9, 0, 10, 1, 1},
+      {{30, 50}, 18, 10, 2, 0, 1, 1},
+      {{10, 50}, 18, 10, 2, 0, 1, 1}}},  
 
     // Level 9
-    {{{{20, 70}, 10, 10, 4, 0, 1},      // Very fast right
-      {{280, 170}, 15, 20, -4, 0, 1},    // Very fast left
-      {{100, 130}, 5, 15, 0, 2, 1},      // Down
-      {{200, 90}, 20, 5, 0, -2, 1},      // Up
-      {{150, 150}, 10, 10, 0, 0, 1}}},   // Static
+    {{{{300, 112}, 18, 10, -6, 0, 1, 1},  
+      {{260, 112}, 18, 10, -12, 0, 1, 1},
+      {{220, 112}, 18, 10, -8, 0, 1, 1},
+      {{180, 112}, 18, 10, -10, 0, 1, 1},
+      {{155, 230}, 9, 9, 0, 9, 1, 1},     
+      {{155, 210}, 9, 9, 0, 12, 1, 1},      
+      {{155, 190}, 9, 9, 0, 3, 1, 1},
+      {{155, 170}, 9, 9, 0, 10, 1, 1},
+      {{30, 50}, 18, 10, 3, 0, 1, 1},
+      {{10, 50}, 18, 10, 6, 0, 1, 1}}},  
 
     // Level 10
-    {{{{0, 80}, 15, 15, 3, 3, 1},       // Fast diagonal right-down
-      {{300, 160}, 10, 20, -3, -3, 1},   // Fast diagonal left-up
-      {{80, 110}, 5, 10, 4, 0, 1},       // Very fast right
-      {{220, 130}, 20, 5, -4, 0, 1},     // Very fast left
-      {{150, 100}, 10, 15, 0, 0, 1}}}    // Static
+    {{{{300, 112}, 18, 10, -1, 0, 1, 1},  
+      {{260, 112}, 18, 10, -1, 0, 1, 1},
+      {{220, 112}, 18, 10, -1, 0, 0, 0},
+      {{180, 112}, 18, 10, -1, 0, 0, 0},
+      {{155, 230}, 9, 9, 0, 1, 1, 1},     
+      {{155, 210}, 9, 9, 0, 1, 1, 1},      
+      {{155, 190}, 9, 9, 0, 1, 0, 0},
+      {{155, 170}, 9, 9, 0, 1, 0, 0},
+      {{30, 50}, 18, 10, 1, 0, 1, 1},
+      {{10, 50}, 18, 10, 1, 0, 0, 0}}},  
 };
 
 //==============================
@@ -1584,12 +1639,12 @@ int main() {
             zen = 0;
         }
         if (zen && zen != zen_last) {
-            for (int i = 0; i < 5; i++) {
-                trains[i].active = 0; 
+            for (int i = 0; i < 10; i++) {
+                if (trains[i].zen_ctrl){trains[i].active = 0; }
             }
         } else if (!zen && zen != zen_last) {
-            for (int i = 0; i < 5; i++) {
-                trains[i].active = 1; 
+            for (int i = 0; i < 10; i++) {
+                if (trains[i].zen_ctrl){trains[i].active = 1; }
             }
         }
         zen_last = zen;
@@ -1600,7 +1655,7 @@ int main() {
             slugfox.face_dir = 1;
             slugfox.status = 0;
             frame_counter = 0;  // Reset animation
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < 10; i++) {
                 if (trains[i].active) {
                     trains[i].active = 0;
                 }
@@ -1623,7 +1678,7 @@ int main() {
                 //更新玩家位置
                 update_character_movement(&slugfox.chara_pos);
 
-                for (int i = 0; i < 5; i++) {
+                for (int i = 0; i < 10; i++) {
                     if (trains[i].active) {
                         update_train(&trains[i]);
                         if (train_collision(&slugfox.chara_pos)) {
@@ -1694,20 +1749,8 @@ void draw_init_level() {
     clear_screen();
     draw_trigger(&trigger_pos[current_level]);
     draw_character(&slugfox);
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 10; i++) {
         if (trains[i].active) draw_train(&trains[i]);
-    }
-    for (int y = 0; y < HEIGHT; y++) {
-        for (int x = 0; x < WIDTH; x++) {
-            pixel_rgb_t pixel = level.level_1_front[y][x];
-            // Skip pixels that are near white (within tolerance of WHITE) or pure black
-            if (pixel.r == CYAN.r &&
-                pixel.g == CYAN.g &&
-                pixel.b == CYAN.b) {
-                continue;
-            }
-            vp->bfbp->pixels[y][x] = pixel;
-        }
     }
     write_hex(current_level);
     swap_buffers();
@@ -1896,6 +1939,7 @@ void trigger_collision(Position *chara_pos) {
         //将玩家位置重设为关卡开始点
         *chara_pos = init_pos[current_level];
         draw_init_level(current_level);  // Redraw new level
+        train_gen(current_level);
         write_hex(current_level);    
     }
 }
@@ -2095,7 +2139,7 @@ void draw_platforms(void) {
 
 void train_gen(){
     if (current_level > 0) {  // Only generate for levels 1-10
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 10; i++) {
             trains[i] = level_trains[current_level-1].trains[i];
         }
     }
@@ -2109,7 +2153,7 @@ int train_collision(const Position *chara_pos) {
     int chara_top = chara_pos->y;
     int chara_bottom = chara_pos->y + slugfox.h;
 
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 10; i++) {
         if (trains[i].active) {
             int train_left = trains[i].pos.x;
             int train_right = trains[i].pos.x + trains[i].w;
@@ -2219,7 +2263,7 @@ void redraw_frame(const Position *chara_pos) {
     if (current_level > 0) {
         draw_platforms();
     }
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 10; i++) {
         if (trains[i].active) draw_train(&trains[i]);
     }
 	
