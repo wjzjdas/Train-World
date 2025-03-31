@@ -4,6 +4,12 @@
 	
 	
 	
+	
+	
+	
+	
+	
+	
 	#include <stdint.h>
 
 //IO.c
@@ -1623,8 +1629,14 @@ int train_collision(const Position *chara_pos);
 //==============================
 //====== main从这里开始 =========
 //==============================
-int zen = 0;
-int zen_last;
+// 全局变量：
+// Zen 模式相关全局变量
+volatile int zen_mode = 0;         // 0: 未激活，1: Zen 模式激活中
+volatile int zen_timer = 0;        // Zen 模式激活剩余帧数
+volatile int zen_charge = 180;     // 当前充能值
+const int zen_charge_max = 180;    // 充能条满值
+volatile int enter_pressed = 0;    // 当键盘检测到 Enter 键时置1
+
 
 int main() {
     init_video();
@@ -1633,79 +1645,106 @@ int main() {
 
     while (1) {
         int switches = read_switches();
-        if (switches & 0x04) {
-            zen = 1;//开启zen mode
-        } else {
-            zen = 0;
-        }
-        if (zen && zen != zen_last) {
-            for (int i = 0; i < 10; i++) {
-                if (trains[i].zen_ctrl){trains[i].active = 0; }
-            }
-        } else if (!zen && zen != zen_last) {
-            for (int i = 0; i < 10; i++) {
-                if (trains[i].zen_ctrl){trains[i].active = 1; }
-            }
-        }
-        zen_last = zen;
         
-        if (switches & 0x02) {  // SW1: 重置
-            current_level = 0; //重置所有关卡并行进至下个时钟
+        // SW1: 重置游戏
+        if (switches & 0x02) {
+            current_level = 0;
             slugfox.chara_pos = init_pos[current_level];
             slugfox.face_dir = 1;
             slugfox.status = 0;
-            frame_counter = 0;  // Reset animation
+            frame_counter = 0;
             for (int i = 0; i < 10; i++) {
                 if (trains[i].active) {
                     trains[i].active = 0;
                 }
             }
             draw_start_screen();
-            while (read_switches() & 0x02);  // Debounce
-
-        } else {  
-
-            // SW0: 开始游戏，从startscreen转换至第一关
-            if ((switches & 0x01) && (current_level == 0)){ 
-                current_level++; //Current Level = 1
+            while (read_switches() & 0x02);  // 消抖
+        } 
+        else {
+            // SW0: 开始游戏（从开始界面转换到第一关）
+            if ((switches & 0x01) && (current_level == 0)) { 
+                current_level++;  // 进入关卡 1
                 train_gen(current_level);
                 draw_init_level();
-                while (read_switches() & 0x01);  // Debounce
+                while (read_switches() & 0x01);  // 消抖
             } 
-
-            //仅在游戏开始后奏效
             else {
-                //更新玩家位置
+                // —— Zen 模式处理部分 —— 
+                // 1. 检测键盘 Enter 键触发（Enter 扫描码为 0x5A，应在键盘处理中设置 enter_pressed）
+                if (enter_pressed) {
+                    // 只有当充能条已充满且当前不在 Zen 模式时才能触发
+                    if (!zen_mode && zen_charge >= zen_charge_max) {
+                        zen_mode = 1;        // 开启 Zen 模式
+                        zen_timer = 180;       // Zen 模式持续 180 帧（约 3 秒）
+                        zen_charge = 180;        // 消耗掉充能条
+                    }
+                    enter_pressed = 0;  // 清除键盘触发标志（确保只触发一次）
+                }
+                
+                // 2. 如果处于 Zen 模式，暂停绘制那些标记为 zen_ctrl 的火车（或子弹），并计时
+                if (zen_mode) {
+                    for (int i = 0; i < 10; i++) {
+                        if (trains[i].zen_ctrl) {
+                            trains[i].active = 0;
+                        }
+                    }
+                    if (zen_timer > 0) {
+                        zen_timer--;
+						zen_charge--;
+                    } else {
+                        // Zen 模式结束后，恢复火车绘制
+                        zen_mode = 0;
+                        for (int i = 0; i < 10; i++) {
+                            if (trains[i].zen_ctrl) {
+                                trains[i].active = 1;
+                            }
+                        }
+                    }
+                }
+                else {
+                    // 当不处于 Zen 模式时，充能条缓慢充能，直至达到满值
+                    if (zen_charge < zen_charge_max) {
+                        zen_charge++;  // 每帧充能 1 单位，可根据需要调整充能速度
+                    }
+                }
+                // —— Zen 模式处理结束 —— 
+
+                // 更新玩家位置
                 update_character_movement(&slugfox.chara_pos);
 
+                // 更新火车位置与碰撞检测
                 for (int i = 0; i < 10; i++) {
                     if (trains[i].active) {
                         update_train(&trains[i]);
                         if (train_collision(&slugfox.chara_pos)) {
                             slugfox.chara_pos = init_pos[current_level];
                             draw_init_level(current_level);
-                            break;  // Exit loop after reset
+                            break;
                         }
                     }
                 }
 
-                //检查玩家在此帧是否与TRIGGER重合
+                // 检查玩家是否与触发器碰撞
                 trigger_collision(&slugfox.chara_pos);
+				
                 
-                //Redraw entire frame every loop iteration for animations
+                // 重绘整个帧（背景、平台、火车、玩家、触发器等）
                 redraw_frame(&slugfox.chara_pos);
+
             }
-        } 
+        }
     }
     return 0;
 }
+
 
 //==================================
 //====== function从这里开始 =========
 //==================================
 
 void init_video() {
-    //设置分辨率为320*240（学校硬件如此）
+    //设置分辨率为320*240
     vp->resolution = (HEIGHT << 16) | WIDTH;
     // Initialize back buffer to our allocated array
     vp->bfbp = (struct fb_t volatile *)backbuffer.pixels;
@@ -2013,6 +2052,7 @@ void update_character_movement(Position *chara_pos) {
                 case 0x1B: s_pressed = 1; break;
                 case 0x1C: a_pressed = 1; break;
                 case 0x23: d_pressed = 1; break;
+				case 0x5A:enter_pressed = 1; break;
                 default: break;
             }
         }
@@ -2242,6 +2282,43 @@ void draw_train(const Train *train) {
     }
 }
 
+void draw_zen_bar(void) {
+    int bar_x = 5, bar_y = 5;
+    int bar_width = 100, bar_height = 10;
+    
+    // 绘制外部边框（白色）
+    for (int x = bar_x; x < bar_x + bar_width; x++) {
+        if (bar_y >= 0 && bar_y < HEIGHT && x >= 0 && x < WIDTH)
+            vp->bfbp->pixels[bar_y][x] = WHITE;  // 顶边
+        if (bar_y + bar_height - 1 >= 0 && bar_y + bar_height - 1 < HEIGHT && x >= 0 && x < WIDTH)
+            vp->bfbp->pixels[bar_y + bar_height - 1][x] = WHITE;  // 底边
+    }
+    for (int y = bar_y; y < bar_y + bar_height; y++) {
+        if (bar_x >= 0 && bar_x < WIDTH && y >= 0 && y < HEIGHT)
+            vp->bfbp->pixels[y][bar_x] = WHITE;  // 左边
+        if (bar_x + bar_width - 1 >= 0 && bar_x + bar_width - 1 < WIDTH && y >= 0 && y < HEIGHT)
+            vp->bfbp->pixels[y][bar_x + bar_width - 1] = WHITE;  // 右边
+    }
+    
+    // 根据 zen_charge 计算充能条内部的填充宽度
+    int fill_width = ((bar_width - 2) * zen_charge) / zen_charge_max;
+    
+    // 填充充能条内部区域
+    for (int y = bar_y + 1; y < bar_y + bar_height - 1; y++) {
+        for (int x = bar_x + 1; x < bar_x + 1 + fill_width; x++) {
+            if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT)
+                vp->bfbp->pixels[y][x] = GREEN;
+        }
+        // 剩余区域绘制为背景色（这里选择 BLACK，可按需要调整）
+        for (int x = bar_x + 1 + fill_width; x < bar_x + bar_width - 1; x++) {
+            if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT)
+                vp->bfbp->pixels[y][x] = BLACK;
+        }
+    }
+}
+
+
+
 //==============================
 //====== 全部功能大总和 =========
 //==============================
@@ -2269,7 +2346,9 @@ void redraw_frame(const Position *chara_pos) {
 	
 
     update_frame_counter();  // Must be called here
-    
+	if(current_level != 0){
+    	draw_zen_bar();
+	}
     draw_character(&slugfox);
      // Draw all elements in order
     if (current_level > 0) {
