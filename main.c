@@ -1,5 +1,7 @@
 
 	
+	
+	
 	#include <stdint.h>
 
 //IO.c
@@ -1874,20 +1876,22 @@ void trigger_collision(Position *chara_pos) {
     }
 }
 
-#define NUM_PLATFORMS 5
+#define NUM_PLATFORMS 6
 
 typedef struct {
     int x;
     int y;
+	int length;
 } Platform;
 
 // Example platforms: each platform spans from x to x+10 at a fixed y.
 Platform platforms[NUM_PLATFORMS] = {
-    {70, 150},
-    {70, 90},
-	{70, 40},
-    {220, 165},
-	{220, 80},
+    {70, 140, 50},
+	{150, 150, 20},
+    {70, 95, 50},
+	{150, 80, 20},
+    {220, 165, 50},
+	{220, 80, 50},
 	
 };
 
@@ -1895,7 +1899,7 @@ Platform platforms[NUM_PLATFORMS] = {
 int on_platform(Position *chara_pos) {
     for (int i = 0; i < NUM_PLATFORMS; i++) {
         if (chara_pos->x + slugfox.w > platforms[i].x &&
-            chara_pos->x < platforms[i].x + 50) {
+            chara_pos->x < platforms[i].x + platforms[i].length) {
             if (chara_pos->y + slugfox.h == platforms[i].y) {
                 return 1;
             }
@@ -2013,7 +2017,7 @@ void update_character_movement(Position *chara_pos) {
         // 检查是否与平台碰撞
         for (int i = 0; i < NUM_PLATFORMS; i++) {
             if (chara_pos->x + slugfox.w > platforms[i].x &&
-                chara_pos->x < platforms[i].x + 50) {
+                chara_pos->x < platforms[i].x + platforms[i].length) {
                 if (vertical_velocity >= 0 &&
                     chara_pos->y + slugfox.h <= platforms[i].y &&
                     new_y + slugfox.h >= platforms[i].y) {
@@ -2045,7 +2049,7 @@ void draw_platforms(void) {
         int px = platforms[i].x;
         int py = platforms[i].y;
         // Draw a 10x3 rectangle for the platform
-        for (int dx = 0; dx < 50; dx++) {
+        for (int dx = 0; dx < platforms[i].length; dx++) {
             for (int dy = 0; dy < 3; dy++) {
                 int x = px + dx;
                 int y = py + dy;
