@@ -1,6 +1,5 @@
-# Train-World
+# Train-World - A COLLAB PROJECT
 RISC-V Based 2D Platformer (Heavily inspired by Rain World!!! <3)
-A COLLAB PROJECT
 - Our Main Character is SlugFox! (Not really a slug, is it?)
 
 ![static_r1](https://github.com/user-attachments/assets/9c2dec6f-1a45-4718-817f-2575713144e2)
