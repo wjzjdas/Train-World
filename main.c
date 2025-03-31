@@ -1,4 +1,5 @@
-#include <stdint.h>
+
+	#include <stdint.h>
 
 //IO.c
 #define HEX_DISPLAY 0xFF200020
@@ -1843,33 +1844,58 @@ void trigger_collision(Position *chara_pos){
     }
 }
 
+#define NUM_PLATFORMS 5
+
+typedef struct {
+    int x;
+    int y;
+} Platform;
+
+// Example platforms: each platform spans from x to x+10 at a fixed y.
+Platform platforms[NUM_PLATFORMS] = {
+    {70, 150},
+    {70, 90},
+	{70, 40},
+    {220, 165},
+	{220, 80},
+	
+};
+
+// Helper function to check if the character is exactly standing on any platform
+int on_platform(Position *chara_pos) {
+    for (int i = 0; i < NUM_PLATFORMS; i++) {
+        if (chara_pos->x + slugfox.w > platforms[i].x &&
+            chara_pos->x < platforms[i].x + 50) {
+            if (chara_pos->y + slugfox.h == platforms[i].y) {
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
 void update_character_movement(Position *chara_pos) {
-    int switches = read_switches(); // Read switch status (if used)
-    int jumpPressed = 0;
-    int manualDownPressed = 0;
-    int leftPressed = 0;
-    int rightPressed = 0;
+    int switches = read_switches();
+    int jumpPressed = 0, manualDownPressed = 0, leftPressed = 0, rightPressed = 0;
     int PS2_data, RVALID;
     unsigned char key;
-    unsigned char lastKey = -1; 
+    unsigned char lastKey = -1;
     horizontal_velocity_clone = 0;
-    // Process all keys in the FIFO and set flags for each relevant key
-    while (1) {
-        
-        PS2_data = *(PS2_ptr);             // Read data from the PS/2 port
-        RVALID = (PS2_data & 0x8000);      // Check if data is valid (high bit indicates validity)
-        if (!RVALID) {
-            break; // Exit if FIFO is empty
-        }
-        key = PS2_data & 0xFF;             // Get the scan code (lower 8 bits)
 
-        if (key == 0xF0) {  // Break code detected (next key is the released key)
-            lastKey = -1;    // Reset lastKey to detect which key is released
+    // Process all keys in the FIFO and set flags
+    while (1) {
+        PS2_data = *(PS2_ptr);
+        RVALID = (PS2_data & 0x8000);
+        if (!RVALID) {
+            break;
+        }
+        key = PS2_data & 0xFF;
+        if (key == 0xF0) {  // Break code, ignore
+            lastKey = -1;
             continue;
         }
-
         switch (key) {
-            case 0x1D:  // W key: jump trigger
+            case 0x1D:  // W key: jump
                 jumpPressed = 1;
                 break;
             case 0x1B:  // S key: manual downward movement
@@ -1889,80 +1915,111 @@ void update_character_movement(Position *chara_pos) {
         lastKey = key;
     }
 
-    // BLOCK CHARACTER AT SCREEN BORDERS
-    // Prevent movement beyond left border
+    // Block character at screen borders
     if (chara_pos->x <= 0) {
         chara_pos->x = 0;
-        horizontal_velocity = 0; // Stop horizontal movement if hitting left wall
+        horizontal_velocity = 0;
     }
-    // Prevent movement beyond right border
     if (chara_pos->x + slugfox.w >= WIDTH) {
         chara_pos->x = WIDTH - slugfox.w;
-        horizontal_velocity = 0; // Stop horizontal movement if hitting right wall
+        horizontal_velocity = 0;
     }
 
-    // Normal Movement on the Ground
+    // Ground movement (only when not in the air)
     if (!is_jumping) {
-        if (leftPressed && chara_pos->x > 0) { // Prevent moving left beyond screen
+        if (leftPressed && chara_pos->x > 0) {
             chara_pos->x -= 5;
-            slugfox.face_dir = 0; // Face left
+            slugfox.face_dir = 0;
         }
-        if (rightPressed && chara_pos->x + slugfox.w < WIDTH) { // Prevent moving right beyond screen
+        if (rightPressed && chara_pos->x + slugfox.w < WIDTH) {
             chara_pos->x += 5;
-            slugfox.face_dir = 1; // Face right
+            slugfox.face_dir = 1;
         }
     }
 
-    // Jump Logic
-    if (jumpPressed && !is_jumping && (chara_pos->y + slugfox.h >= GROUND_LEVEL)) {
+    // Jump initiation: allow jump if on ground or on a platform
+    if (jumpPressed && !is_jumping &&
+        ((chara_pos->y + slugfox.h >= GROUND_LEVEL) || on_platform(chara_pos))) {
         vertical_velocity = jump_initial_velocity;
         is_jumping = 1;
         if (leftPressed && !rightPressed) {
             horizontal_velocity = -5;
-            slugfox.face_dir = 0; // Face left
+            slugfox.face_dir = 0;
         } else if (rightPressed && !leftPressed) {
             horizontal_velocity = 5;
-            slugfox.face_dir = 1; // Face right
+            slugfox.face_dir = 1;
         } else {
-            horizontal_velocity = 0; // Pure vertical jump
+            horizontal_velocity = 0;
         }
     }
 
-    // Manual Downward Movement
+    // Manual downward movement
     if (manualDownPressed && !is_jumping && (chara_pos->y + slugfox.h < HEIGHT)) {
         chara_pos->y += 3;
     }
 
-    // Gravity & Jump Physics
-    if (!is_jumping && (chara_pos->y + slugfox.h < GROUND_LEVEL)) {
+    // If not on ground or platform, start falling
+    if (!is_jumping && (chara_pos->y + slugfox.h < GROUND_LEVEL) && !on_platform(chara_pos)) {
         is_jumping = 1;
         vertical_velocity = 0;
     }
 
+    // Apply gravity and update position if in the air
     if (is_jumping) {
-        //  Block Movement at Borders Mid-Air
-        if ((chara_pos->x <= 0 && horizontal_velocity < 0) ||  // Hitting left border
-            (chara_pos->x + slugfox.w >= WIDTH && horizontal_velocity > 0)) {  // Hitting right border
-            horizontal_velocity = 0;  // Stop horizontal movement in air
-        } else {
-            chara_pos->x += horizontal_velocity;  // Apply horizontal velocity normally
+        // In air, fixed horizontal velocity (captured at jump start)
+        chara_pos->x += horizontal_velocity;
+        int new_y = chara_pos->y + vertical_velocity;
+        int landed = 0;
+
+        // Check collision with each platform
+        for (int i = 0; i < NUM_PLATFORMS; i++) {
+            if (chara_pos->x + slugfox.w > platforms[i].x &&
+                chara_pos->x < platforms[i].x + 50) {
+                // If falling and crossing the platform's top
+                if (vertical_velocity >= 0 &&
+                    chara_pos->y + slugfox.h <= platforms[i].y &&
+                    new_y + slugfox.h >= platforms[i].y) {
+                    chara_pos->y = platforms[i].y - slugfox.h;
+                    vertical_velocity = 0;
+                    horizontal_velocity = 0;
+                    is_jumping = 0;
+                    landed = 1;
+                    break;
+                }
+            }
         }
 
-        // Apply gravity and update position
-        chara_pos->y += vertical_velocity;
-        vertical_velocity += gravity;
-
-        //  Landing
-        if (chara_pos->y + slugfox.h >= GROUND_LEVEL) {
-            chara_pos->y = GROUND_LEVEL - slugfox.h;
-            vertical_velocity = 0;
-            horizontal_velocity = 0;
-            is_jumping = 0;
+        // If not landed on a platform, check for ground landing
+        if (!landed) {
+            if (new_y + slugfox.h >= GROUND_LEVEL) {
+                chara_pos->y = GROUND_LEVEL - slugfox.h;
+                vertical_velocity = 0;
+                horizontal_velocity = 0;
+                is_jumping = 0;
+            } else {
+                chara_pos->y = new_y;
+                vertical_velocity += gravity;
+            }
         }
     }
-    
 }
 
+void draw_platforms(void) {
+    for (int i = 0; i < NUM_PLATFORMS; i++) {
+        int px = platforms[i].x;
+        int py = platforms[i].y;
+        // Draw a 10x3 rectangle for the platform
+        for (int dx = 0; dx < 50; dx++) {
+            for (int dy = 0; dy < 3; dy++) {
+                int x = px + dx;
+                int y = py + dy;
+                if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
+                    vp->bfbp->pixels[y][x] = PURPLE;
+                }
+            }
+        }
+    }
+}
 
 
 
@@ -2060,6 +2117,8 @@ void redraw_frame(const Position *chara_pos) {
     for (int i = 0; i < 5; i++) {
         if (trains[i].active) draw_train(&trains[i]);
     }
+	// Draw platforms
+    draw_platforms();
 
     update_frame_counter();  // Must be called here
     if (current_level == 1) {
@@ -2081,6 +2140,7 @@ void redraw_frame(const Position *chara_pos) {
     if (current_level > 0) {
         draw_trigger(&trigger_pos[current_level]);
     }
+
     
     
     swap_buffers();  // Swap only once per frame
