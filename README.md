@@ -13,7 +13,7 @@ For those who don't have physical setup:
 -  D - Right
 -  W - Jump
 -  S - Down
--  Enter - Enter Zen Mode (Where bullets will disappear for a short period, watch our for the green bar on top)
+-  Enter - Enter Zen Mode (Where bullets will disappear for a short period, watch out for the green bar on top!!!)
 -  LEDR displays current level
 -  Try to avoid bullets and reach the star trigger!
 ## ENJOY!!!
