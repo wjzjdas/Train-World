@@ -28,4 +28,4 @@ For those who don't have physical setup:
 -  LEDR displays current level
 -  Try to avoid bullets and reach the star trigger!
 ## ENJOY!!!
-- Made by JDas and Dylan | 03/31/2025
+- Made by JDas and Dylan || 03/31/2025
