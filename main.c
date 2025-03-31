@@ -2,6 +2,8 @@
 	
 	
 	
+	
+	
 	#include <stdint.h>
 
 //IO.c
@@ -61,7 +63,7 @@ pixel_rgb_t CYAN = {24, 47, 4};
 
 // Gravity system parameters
 const int gravity = 8;                 // Gravity acceleration (applied each frame)
-const int jump_initial_velocity = -24; // Initial jump velocity (negative value makes the character move up)
+const int jump_initial_velocity = -26; // Initial jump velocity (negative value makes the character move up)
 static int vertical_velocity = 0;      // Current vertical velocity of the character
 static int is_jumping = 0;             // 0: not jumping, 1: currently in a jump
 
@@ -1884,14 +1886,13 @@ typedef struct {
 	int length;
 } Platform;
 
-// Example platforms: each platform spans from x to x+10 at a fixed y.
 Platform platforms[NUM_PLATFORMS] = {
     {70, 140, 50},
 	{150, 150, 20},
-    {70, 95, 50},
+    {70, 90, 50},
 	{150, 80, 20},
     {220, 165, 50},
-	{220, 80, 50},
+	{220, 70, 50},
 	
 };
 
