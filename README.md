@@ -9,6 +9,7 @@ RISC-V Based 2D Platformer (Title inspired by Rain World, Obviously)
 ![move_r2](https://github.com/user-attachments/assets/247b5cb0-0842-4f6a-981c-aac78e28dba7)
 ![move_r3](https://github.com/user-attachments/assets/a828cf31-b665-4754-a340-9d645e973fb1)
 
+- Traversing a world abandoned, where nothing but manless trains and toxic fumes remain. Will SlugFox ever find his destination?  
 # How To Play
 For those who don't have physical setup:
 1. Go to [CPULator](https://cpulator.01xz.net/?sys=rv32-de1soc) (Or search up CPULator, select for RISC-V RV32 --> RISC-V RV32 DE1-SoC)
@@ -23,7 +24,7 @@ For those who don't have physical setup:
 -  D - Right
 -  W - Jump
 -  S - Down
--  Enter - Enter Zen Mode (Where bullets will disappear for a short period, watch out for the green bar on top!!!)
+-  Enter - Enter Zen Mode (Where bullets will disappear for a limited period, watch out for the green bar on top!!!)
 -  LEDR displays current level
 -  Try to avoid bullets and reach the star trigger!
 ## ENJOY!!!
