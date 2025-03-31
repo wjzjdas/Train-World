@@ -8,6 +8,12 @@ For those who don't have physical setup:
 3. Find the VGA Display at Right Bar, scale up as you wish
 -  SW0 -- Start Game
 -  SW1 -- Reset Game
--  WASD, Space -- Character Control (Need to Click on PS2-Keyboard Panel on Right Bar)
+-  Control: (Need to Use PS2-Keyboard Panel on Right Bar)
+-  A - Left
+-  D - Right
+-  W - Jump
+-  S - Down
+-  Enter - Enter Zen Mode (Where bullets will disappear for a short period, watch our for the green bar on top)
 -  LEDR displays current level
+-  Try to avoid bullets and reach the star trigger!
 ## ENJOY!!!
