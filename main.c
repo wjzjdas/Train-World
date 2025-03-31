@@ -31,6 +31,7 @@ int current_level = 0;
 
 // Global frame counter for animation timing
 volatile unsigned int frame_counter = 0;
+volatile int zen_counter = 0;
 
 //掌控玩家移动
 static int horizontal_velocity = 0;
@@ -1469,11 +1470,11 @@ typedef struct {
 // Level-specific train data (levels 1-10, indexed 0-9)
 const LevelTrains level_trains[10] = {
     // Level 1
-    {{{{155, 230}, 9, 9, 0, 6, 1},      // Moving right, mid-screen
-      {{300, 112}, 18, 10, -6, 0, 1},    // Moving left, lower
-      {{240, 112}, 18, 10, -6, 0, 1},       // Static, top
-      {{155, 170}, 9, 9, 0, 6, 1},      // Moving down
-      {{30, 50}, 18, 10, 6, 0, 1}}},   // Moving up
+    {{{{155, 230}, 9, 9, 0, 2, 1},    
+      {{300, 112}, 18, 10, -4, 0, 1},  
+      {{240, 112}, 18, 10, -4, 0, 1},     
+      {{155, 210}, 9, 9, 0, 2, 1},      
+      {{30, 50}, 18, 10, 2, 0, 1}}},  
 
     // Level 2
     {{{{0, 50}, 10, 20, 3, 0, 1},       // Fast right, top
@@ -1567,6 +1568,8 @@ int train_collision(const Position *chara_pos);
 //==============================
 //====== main从这里开始 =========
 //==============================
+int zen = 0;
+int zen_last;
 
 int main() {
     init_video();
@@ -1575,7 +1578,22 @@ int main() {
 
     while (1) {
         int switches = read_switches();
-    
+        if (switches & 0x04) {
+            zen = 1;//开启zen mode
+        } else {
+            zen = 0;
+        }
+        if (zen && zen != zen_last) {
+            for (int i = 0; i < 5; i++) {
+                trains[i].active = 0; 
+            }
+        } else if (!zen && zen != zen_last) {
+            for (int i = 0; i < 5; i++) {
+                trains[i].active = 1; 
+            }
+        }
+        zen_last = zen;
+        
         if (switches & 0x02) {  // SW1: 重置
             current_level = 0; //重置所有关卡并行进至下个时钟
             slugfox.chara_pos = init_pos[current_level];
@@ -1827,9 +1845,13 @@ void draw_character(Slugfox *slugfox) {
                 continue;
             }
             if (horizontal_velocity_clone == 0){
-                vp->bfbp->pixels[py][px] = pixel;
+                if (py >= 0) {
+                    vp->bfbp->pixels[py][px] = pixel;
+                }
             } else { //防止角色和地面穿模
-                vp->bfbp->pixels[py-3][px] = pixel;
+                if (py-3 >= 0) {
+                    vp->bfbp->pixels[py-3][px] = pixel;
+                }
             }
             
         }
@@ -1884,15 +1906,16 @@ typedef struct {
     int x;
     int y;
 	int length;
+    int draw;
 } Platform;
 
 Platform platforms[NUM_PLATFORMS] = {
-    {70, 140, 50},
-	{150, 150, 20},
-    {70, 90, 50},
-	{150, 80, 20},
-    {220, 165, 50},
-	{220, 70, 50},
+    {70, 140, 50, 0},
+	{150, 150, 20, 1},
+    {70, 90, 50, 0},
+	{150, 80, 20, 1},
+    {220, 165, 50, 0},
+	{220, 70, 50, 0},
 	
 };
 
@@ -1961,12 +1984,12 @@ void update_character_movement(Position *chara_pos) {
     }
 
     // 边界检测
-    if (chara_pos->x <= 0) {
-        chara_pos->x = 0;
+    if (chara_pos->x <= 65) {
+        chara_pos->x = 65;
         horizontal_velocity = 0;
     }
-    if (chara_pos->x + slugfox.w >= WIDTH) {
-        chara_pos->x = WIDTH - slugfox.w;
+    if (chara_pos->x + slugfox.w >= 250) {
+        chara_pos->x = 250 - slugfox.w;
         horizontal_velocity = 0;
     }
 
@@ -1983,7 +2006,7 @@ void update_character_movement(Position *chara_pos) {
     }
 
     // 跳跃触发（允许在地面或平台上跳跃）
-    if (w_pressed && !is_jumping &&
+    if (w_pressed && !is_jumping && current_level != 0 &&
         ((chara_pos->y + slugfox.h >= GROUND_LEVEL) || on_platform(chara_pos))) {
         vertical_velocity = jump_initial_velocity;
         is_jumping = 1;
@@ -2047,6 +2070,8 @@ void update_character_movement(Position *chara_pos) {
 
 void draw_platforms(void) {
     for (int i = 0; i < NUM_PLATFORMS; i++) {
+        if (platforms[i].draw == 0) continue; //有些平台不需要被绘制
+
         int px = platforms[i].x;
         int py = platforms[i].y;
         // Draw a 10x3 rectangle for the platform
@@ -2055,7 +2080,7 @@ void draw_platforms(void) {
                 int x = px + dx;
                 int y = py + dy;
                 if (x >= 0 && x < WIDTH && y >= 0 && y < HEIGHT) {
-                    vp->bfbp->pixels[y][x] = PURPLE;
+                    vp->bfbp->pixels[y][x] = BLACK;
                 }
             }
         }
@@ -2113,14 +2138,20 @@ void update_train(Train *train) {
         if (train->pos.x <= 0) {
             train->pos.x = 0;
             train->hor_speed = -train->hor_speed;
+        } 
+        if (train->pos.y == 50 && train->ver_speed == 0){
+            if (train->pos.x + train->w >= 170) {//THIS IS FOR THE HIGHEST
+                train->pos.x = 170 - train->w;
+                train->hor_speed = -train->hor_speed;
+            }
+        } else {
+            if (train->pos.x + train->w >= WIDTH) {
+                train->pos.x = WIDTH - train->w;
+                train->hor_speed = -train->hor_speed;
+            }
         }
-        else if (train->pos.x + train->w >= WIDTH) {
-            train->pos.x = WIDTH - train->w;
-            train->hor_speed = -train->hor_speed;
-        }
-        if (train->pos.y <= 0) {
-            train->pos.y = 0;
-            train->ver_speed = -train->ver_speed;
+        if (train->pos.y + train->h <= 0) {
+            train->pos.y = 231;
         }
         else if (train->pos.y + train->h >= HEIGHT) {
             train->pos.y = HEIGHT - train->h;
@@ -2128,6 +2159,7 @@ void update_train(Train *train) {
         }
     }
 }
+
 void draw_train(const Train *train) {
     if (train->active) {
         int x = train->pos.x;
@@ -2139,6 +2171,9 @@ void draw_train(const Train *train) {
                 if (px >= 0 && px < WIDTH && py >= 0 && py < HEIGHT) {
                     pixel_rgb_t pixel;
                     if (train->h == 10) { //表明画的是横向的火车
+                        if ((px < 37 && train->pos.y==50) ||
+                            (px < 40 && train->pos.y==112) || 
+                            px > 283) continue;
                         pixel = level.train_hor[dy][dx];
                         if ( pixel.r == WHITE.r &&
                             pixel.g == WHITE.g &&
@@ -2146,6 +2181,7 @@ void draw_train(const Train *train) {
                             continue;
                         }
                     } else if (train->h == 9) { //表明画的是竖向的毒气
+                        if (py > 222) continue;
                         pixel = level.train_ver[dy][dx];
                         const int tolerance = 6;
                         if ((abs(pixel.r - PURPLE.r) <= tolerance &&
@@ -2179,27 +2215,17 @@ void update_frame_counter() {
 void redraw_frame(const Position *chara_pos) {
     // Draw background
     clear_screen();
+    // Draw platforms
+    if (current_level > 0) {
+        draw_platforms();
+    }
     for (int i = 0; i < 5; i++) {
         if (trains[i].active) draw_train(&trains[i]);
     }
-	// Draw platforms
-    draw_platforms();
+	
 
     update_frame_counter();  // Must be called here
-    if (current_level == 1) {
-        for (int y = 0; y < HEIGHT; y++) {
-            for (int x = 0; x < WIDTH; x++) {
-                pixel_rgb_t pixel = level.level_1_front[y][x];
-                // Skip pixels that are near white (within tolerance of WHITE) or pure black
-                if (pixel.r == CYAN.r &&
-                    pixel.g == CYAN.g &&
-                    pixel.b == CYAN.b) {
-                    continue;
-                }
-                vp->bfbp->pixels[y][x] = pixel;
-            }
-        }
-    }   
+    
     draw_character(&slugfox);
      // Draw all elements in order
     if (current_level > 0) {
