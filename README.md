@@ -9,7 +9,8 @@ RISC-V Based 2D Platformer (Heavily inspired by Rain World!!! <3)
 ![move_r2](https://github.com/user-attachments/assets/247b5cb0-0842-4f6a-981c-aac78e28dba7)
 ![move_r3](https://github.com/user-attachments/assets/a828cf31-b665-4754-a340-9d645e973fb1)
 
-- Traversing a world abandoned, where nothing but manless trains and toxic fumes remain. Will SlugFox ever find his destination?  
+- Traversing a world abandoned, where nothing but manless trains and toxic fumes remain. Will SlugFox ever find his destination?
+- See a Simple DEMO [Here](https://www.xiaohongshu.com/explore/67ebe598000000001201ff8d?app_platform=android&ignoreEngage=true&app_version=8.93.0&share_from_user_hidden=true&xsec_source=app_share&type=video&xsec_token=CBzyqHiBilHhZu9KPOLw1ZySnKrD36SvmSo1exx2v_gp8=&author_share=1&xhsshare=WeixinSession&shareRedId=ODs7ODY2PTs2NzUyOTgwNjg1OTc2PDxB&apptime=1753867134&share_id=4d2630a1c46e4e74a6793f7dafe3542b&share_channel=wechat)
 # How To Play
 You only need to download main.c to play our game! For those who don't have physical setup:
 1. Go to [CPULator](https://cpulator.01xz.net/?sys=rv32-de1soc) (Or search up CPULator, select for RISC-V RV32 --> RISC-V RV32 DE1-SoC)
